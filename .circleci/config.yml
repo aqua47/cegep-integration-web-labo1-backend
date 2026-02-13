@@ -1,0 +1,54 @@
+version: 2.1
+
+jobs:
+  checkoutEtTests:
+    machine: true
+    steps:
+      - run:
+          command: |
+            git clone https://github.com/aqua47/cegep-integration-web-labo1-backend.git
+            cd cegep-integration-web-labo1-backend
+            npm install
+            npm test
+
+  integrationFrontend:
+    machine: true
+    steps:
+      - run:
+          command: |
+            git clone https://github.com/aqua47/cegep-integration-web-labo1-frontend.git
+            git clone https://github.com/aqua47/cegep-integration-web-labo1-backend.git
+
+            cd cegep-integration-web-labo1-frontend
+            npm install
+            npm run build
+
+            cd ../cegep-integration-web-labo1-backend
+            mkdir -p public
+
+            cp -rT ../cegep-integration-web-labo1-frontend/build ./public
+      - persist_to_workspace:
+          root: .
+          paths:
+            - cegep-integration-web-labo1-backend
+
+  deploiement:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: |
+            cd cegep-integration-web-labo1-backend
+            ls -Rl
+
+
+
+workflows:
+  mon_workflow:
+    jobs:
+      - checkoutEtTests
+      - integrationFrontend:
+          requires: [checkoutEtTests]
+      - deploiement:
+          requires: [integrationFrontend]
